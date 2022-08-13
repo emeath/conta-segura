@@ -2,6 +2,8 @@ package com.banco.conta_segura.models;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class ContaModel {
     private BigDecimal saldo;
     @Column(nullable = false)
     private LocalDateTime dataCriacao;
+    @JsonIgnore // Anotacao para evitar infinite recursion do Jackson
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private ClienteModel cliente;

@@ -50,4 +50,8 @@ public class ClienteService {
 	public void deleteById(Long id) {
 		this.clienteRepository.deleteById(id);
 	}
+
+    public boolean existsById(Long idCliente) {
+		return this.clienteRepository.existsById(idCliente);
+    }
 }
