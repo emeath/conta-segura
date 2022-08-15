@@ -53,6 +53,14 @@ public class UsuarioModel implements UserDetails {
         this.email = email;
     }
 
+    public List<PerfilModel> getPerfis() {
+        return perfis;
+    }
+
+    public void setPerfis(List<PerfilModel> perfis) {
+        this.perfis = perfis;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return perfis;

@@ -1,5 +1,6 @@
 package com.banco.conta_segura.config.security;
 
+import com.banco.conta_segura.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,9 +19,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfigurations extends WebSecurityConfigurerAdapter {
 
     private final AutenticacaoService autenticacaoService;
+    private final TokenService tokenService;
+    private final UsuarioRepository usuarioRepository;
 
-    public SecurityConfigurations(AutenticacaoService autenticacaoService) {
+    public SecurityConfigurations(AutenticacaoService autenticacaoService,
+                                  TokenService tokenService,
+                                  UsuarioRepository usuarioRepository) {
         this.autenticacaoService = autenticacaoService;
+        this.tokenService = tokenService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
@@ -45,6 +52,6 @@ public class SecurityConfigurations extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and().csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().addFilterBefore(new AutenticacaoViaTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+                .and().addFilterBefore(new AutenticacaoViaTokenFilter(tokenService, usuarioRepository), UsernamePasswordAuthenticationFilter.class);
     }
 }
