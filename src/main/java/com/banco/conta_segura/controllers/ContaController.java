@@ -6,12 +6,13 @@ import com.banco.conta_segura.models.ContaModel;
 import com.banco.conta_segura.services.ClienteService;
 import com.banco.conta_segura.services.ContaService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -50,6 +51,57 @@ public class ContaController {
         contaModel.setCliente(clienteModelOptional.get());
         BeanUtils.copyProperties(contaDTO, contaModel);
         return ResponseEntity.status(HttpStatus.OK).body(this.contaService.save(contaModel));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ContaModel>> obterTodasAsContas(
+            @PageableDefault(page = 0, size = 5, sort = {"agencia", "conta"}, direction = Sort.Direction.ASC) Pageable pageable
+            ) {
+        return ResponseEntity.status(HttpStatus.OK).body(contaService.findAll(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> obterContaPorId(@PathVariable(value = "id") Long id) {
+        Optional<ContaModel> contaModelOptional = contaService.findById(id);
+        if (!contaModelOptional.isPresent()){
+            String mensagemDeRetorno = String.format("Conta de id: %d não localizada!", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mensagemDeRetorno);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(contaModelOptional.get());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> atualizarConta(@PathVariable(value = "id") Long id,
+                                                 @RequestBody @Valid ContaDTO contaDTO) {
+        Optional<ContaModel> contaModelOptional = contaService.findById(id);
+        if(!contaModelOptional.isPresent()){
+            String mensagemDeRetorno = String.format("Conta de id: %d não localizada!", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mensagemDeRetorno);
+        }
+        ContaModel contaModel = new ContaModel();
+        contaModel.setId(contaModelOptional.get().getId());
+
+        // Validando se id cliente existe
+        Optional<ClienteModel> clienteModelOptional = clienteService.findById(contaDTO.getIdCliente());
+        if(!clienteModelOptional.isPresent()){
+            String mensagemDeRetorno = String.format("Cliente de id: %d não existe.", contaDTO.getIdCliente());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mensagemDeRetorno);
+        }
+
+        BeanUtils.copyProperties(contaDTO, contaModel);
+        return ResponseEntity.status(HttpStatus.OK).body(contaService.save(contaModel));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deletarContaPorId(@PathVariable(value = "id") Long id) {
+        Optional<ContaModel> contaModelOptional = contaService.findById(id);
+        if (!contaModelOptional.isPresent()){
+            String mensagemDeRetorno = String.format("Conta de id: %d não localizada!", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mensagemDeRetorno);
+        }
+        contaService.deleteById(id);
+        String mensagemAposDelete = String.format("Conta de id: %d deletada com sucesso!", id);
+        return ResponseEntity.status(HttpStatus.OK).body(mensagemAposDelete);
     }
 
 }
